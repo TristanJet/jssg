@@ -1,0 +1,19 @@
+{
+  "name": "jssg",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "marked": "^12.0.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+      "tc": "tsc --noEmit",
+      "dev": "tsc --noEmit && bun run index.ts"
+    }
+}
