@@ -1,6 +1,28 @@
 <main class="page">
-  <h1>{{site-title}}</h1>
   <section class="home-body">
-  {{content}}
+    <div class="profile">
+      <img class="profile-picture" alt="literally-me" src="/media/isagi.jpg"/>
+      <div class="home-text">
+        {{content}}
+      </div>
+    </div>
+    <div class="sub-row">
+      <div class="home-sub" id="writing">
+        <h3>Writing</h3>
+        <div class="tag-list">
+          <!-- WRITING_ITEM -->
+          <p class="tag-item"><a href="/blog/{{slug}}">{{title}}</a> <span class="date">{{date}}</span></p>
+          <!-- /WRITING_ITEM -->
+        </div>
+      </div>
+      <div class="home-sub" id="projects">
+        <h3>Projects</h3>
+        <div class="tag-list">
+          <!-- PROJECT_ITEM -->
+          <p class="tag-item"><a href="/blog/{{slug}}">{{title}}</a> <span class="date">{{date}}</span></p>
+          <!-- /PROJECT_ITEM -->
+        </div>
+      </div>
+    </div>
   </section>
 </main>

@@ -6,6 +6,7 @@ type Frontmatter = {
   title?: string;
   date?: string;
   summary?: string;
+  tags?: string;
   layout?: string;
 };
 
@@ -14,8 +15,19 @@ type Post = {
   date: string;
   summary: string;
   slug: string;
+  tags: string[];
   layout: string;
 };
+
+const markdownRenderer = new marked.Renderer();
+markdownRenderer.image = (href, title, text) => {
+  const safeHref = href ?? "";
+  const safeAlt = text ?? "";
+  const titleAttr = title ? ` title="${title}"` : "";
+  return `<img src="${safeHref}" alt="${safeAlt}" class="post-image"${titleAttr} />`;
+};
+
+marked.use({ renderer: markdownRenderer });
 
 const SITE_TITLE = "Tristan Jet's Blog";
 
@@ -82,22 +94,44 @@ function sortByDateDesc(a: Post, b: Post): number {
   return dateB - dateA;
 }
 
-function extractBlock(template: string, startMarker: string, endMarker: string): {
-  pageTemplate: string;
-  blockTemplate: string;
-} {
-  const startIndex = template.indexOf(startMarker);
-  const endIndex = template.indexOf(endMarker);
-  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
-    throw new Error(`Missing block markers: ${startMarker} ... ${endMarker}`);
+type BlockSpec = {
+  name: string;
+  startMarker: string;
+  endMarker: string;
+};
+
+function extractBlocks(
+  template: string,
+  specs: BlockSpec[],
+): { pageTemplate: string; blockTemplates: Record<string, string> } {
+  let pageTemplate = template;
+  const blockTemplates: Record<string, string> = {};
+
+  for (const spec of specs) {
+    const startIndex = pageTemplate.indexOf(spec.startMarker);
+    const endIndex = pageTemplate.indexOf(spec.endMarker);
+    if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
+      throw new Error(`Missing block markers: ${spec.startMarker} ... ${spec.endMarker}`);
+    }
+
+    const blockStart = startIndex + spec.startMarker.length;
+    blockTemplates[spec.name] = pageTemplate.slice(blockStart, endIndex).trim();
+    pageTemplate =
+      pageTemplate.slice(0, startIndex) + `{{${spec.name}}}` + pageTemplate.slice(endIndex + spec.endMarker.length);
   }
 
-  const blockStart = startIndex + startMarker.length;
-  const blockTemplate = template.slice(blockStart, endIndex).trim();
-  const pageTemplate =
-    template.slice(0, startIndex) + "{{blog-items}}" + template.slice(endIndex + endMarker.length);
+  return { pageTemplate, blockTemplates };
+}
 
-  return { pageTemplate, blockTemplate };
+function requireBlockTemplate(
+  blocks: { blockTemplates: Record<string, string> },
+  name: string,
+): string {
+  const template = blocks.blockTemplates[name];
+  if (!template) {
+    throw new Error(`Missing block template: ${name}`);
+  }
+  return template;
 }
 
 function formatDate(value: string): string {
@@ -109,6 +143,40 @@ function formatDate(value: string): string {
     day: "2-digit",
     year: "numeric",
   }).format(new Date(parsed));
+}
+
+function formatDateDdMmYyyy(value: string): string {
+  if (!value) return "";
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return value;
+  const date = new Date(parsed);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
+  return `${day}-${month}-${year}`;
+}
+
+function parseTags(value?: string): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function applyShortcodes(markdown: string): string {
+  return markdown.replace(/::video\[(.+?)\]/g, (_, src: string) => {
+    const trimmed = src.trim();
+    if (!trimmed) return "";
+    const extension = trimmed.split(".").pop()?.toLowerCase() ?? "";
+    const typeMap: Record<string, string> = {
+      mp4: "video/mp4",
+      webm: "video/webm",
+      ogg: "video/ogg",
+    };
+    const type = typeMap[extension] ?? "video/mp4";
+    return `<video controls autoplay="false" preload="metadata" class="post-video">\n  <source src="${trimmed}" type="${type}" />\n  Your browser does not support the video tag.\n</video>`;
+  });
 }
 
 async function ensureDir(path: string): Promise<void> {
@@ -129,6 +197,25 @@ async function copyAssets(): Promise<void> {
     const file = Bun.file(join(ASSETS_DIR, entry));
     await Bun.write(join(DIST_DIR, entry), file);
   }
+
+  const mediaDir = join(ASSETS_DIR, "media");
+  let mediaEntries: string[] = [];
+  try {
+    mediaEntries = (await readdir(mediaDir, { withFileTypes: true }))
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+  } catch {
+    mediaEntries = [];
+  }
+
+  if (mediaEntries.length > 0) {
+    const mediaOutDir = join(DIST_DIR, "media");
+    await ensureDir(mediaOutDir);
+    for (const entry of mediaEntries) {
+      const file = Bun.file(join(mediaDir, entry));
+      await Bun.write(join(mediaOutDir, entry), file);
+    }
+  }
 }
 
 async function loadLayout(name: string): Promise<string> {
@@ -148,7 +235,7 @@ async function loadMarkdown(filePath: string): Promise<{ frontmatter: Frontmatte
 
   const raw = await file.text();
   const { frontmatter, body } = parseFrontmatter(raw);
-  const contentHtml = await marked.parse(body);
+  const contentHtml = await marked.parse(applyShortcodes(body));
   return { frontmatter, contentHtml };
 }
 
@@ -184,6 +271,7 @@ async function build(): Promise<void> {
     const title = frontmatter.title?.trim() || slug.replace(/-/g, " ");
     const date = frontmatter.date?.trim() || "";
     const summary = frontmatter.summary?.trim() || "";
+    const tags = parseTags(frontmatter.tags);
     const layoutName = frontmatter.layout?.trim() || DEFAULT_LAYOUT;
 
     const postLayout = layoutName === DEFAULT_LAYOUT ? defaultPostLayout : await loadLayout(layoutName);
@@ -210,18 +298,22 @@ async function build(): Promise<void> {
       date,
       summary,
       slug,
+      tags,
       layout: layoutName,
     });
   }
 
   posts.sort(sortByDateDesc);
 
-  const { pageTemplate: blogPageTemplate, blockTemplate: blogItemTemplate } = extractBlock(
-    blogLayout,
-    "<!-- BLOG_ITEM -->",
-    "<!-- /BLOG_ITEM -->",
-  );
+  const blogBlocks = extractBlocks(blogLayout, [
+    {
+      name: "blog-items",
+      startMarker: "<!-- BLOG_ITEM -->",
+      endMarker: "<!-- /BLOG_ITEM -->",
+    },
+  ]);
 
+  const blogItemTemplate = requireBlockTemplate(blogBlocks, "blog-items");
   const listHtml = posts
     .map((post) => {
       return fillTemplate(blogItemTemplate, {
@@ -233,7 +325,7 @@ async function build(): Promise<void> {
     })
     .join("\n");
 
-  const blogPartial = fillTemplate(blogPageTemplate, {
+  const blogPartial = fillTemplate(blogBlocks.pageTemplate, {
     "blog-items": listHtml,
     content: blogMarkdown.contentHtml,
     "site-title": SITE_TITLE,
@@ -261,8 +353,50 @@ async function build(): Promise<void> {
   await ensureDir(contactDir);
   await Bun.write(join(contactDir, "index.html"), contactPage);
 
-  const indexPartial = fillTemplate(indexLayout, {
+  const indexBlocks = extractBlocks(indexLayout, [
+    {
+      name: "writing-items",
+      startMarker: "<!-- WRITING_ITEM -->",
+      endMarker: "<!-- /WRITING_ITEM -->",
+    },
+    {
+      name: "project-items",
+      startMarker: "<!-- PROJECT_ITEM -->",
+      endMarker: "<!-- /PROJECT_ITEM -->",
+    },
+  ]);
+
+  const writingItemTemplate = requireBlockTemplate(indexBlocks, "writing-items");
+  const projectItemTemplate = requireBlockTemplate(indexBlocks, "project-items");
+
+  const writingItems = posts
+    .filter((post) => post.tags.includes("writing"))
+    .map((post) => {
+      return fillTemplate(writingItemTemplate, {
+        title: post.title,
+        date: formatDateDdMmYyyy(post.date),
+        summary: post.summary,
+        slug: encodeURIComponent(post.slug),
+      });
+    })
+    .join("\n");
+
+  const projectItems = posts
+    .filter((post) => post.tags.includes("projects"))
+    .map((post) => {
+      return fillTemplate(projectItemTemplate, {
+        title: post.title,
+        date: formatDateDdMmYyyy(post.date),
+        summary: post.summary,
+        slug: encodeURIComponent(post.slug),
+      });
+    })
+    .join("\n");
+
+  const indexPartial = fillTemplate(indexBlocks.pageTemplate, {
     content: homeMarkdown.contentHtml,
+    "writing-items": writingItems,
+    "project-items": projectItems,
     "site-title": SITE_TITLE,
   });
 
