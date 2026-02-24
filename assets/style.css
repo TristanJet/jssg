@@ -35,6 +35,13 @@ body {
   flex-direction: column;
 }
 
+.home-body {
+  border: 1px solid;
+  padding-left: 2ch;
+  padding-right: 2ch;
+  border-color: #eee;
+}
+
 .profile {
   margin-top: 1.6em;
   display: flex;

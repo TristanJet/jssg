@@ -14,6 +14,7 @@
   },
   "scripts": {
       "tc": "tsc --noEmit",
-      "bld": "tsc --noEmit && bun run index.ts"
+      "bld": "tsc --noEmit && bun run index.ts",
+      "serve": "tsc --noEmit && bun run index.ts serve"
     }
 }

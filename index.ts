@@ -175,7 +175,7 @@ function applyShortcodes(markdown: string): string {
       ogg: "video/ogg",
     };
     const type = typeMap[extension] ?? "video/mp4";
-    return `<video controls autoplay="false" preload="metadata" class="post-video">\n  <source src="${trimmed}" type="${type}" />\n  Your browser does not support the video tag.\n</video>`;
+    return `<video controls preload="metadata" class="post-video">\n  <source src="${trimmed}" type="${type}" />\n  Your browser does not support the video tag.\n</video>`;
   });
 }
 
