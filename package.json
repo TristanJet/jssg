@@ -14,6 +14,6 @@
   },
   "scripts": {
       "tc": "tsc --noEmit",
-      "dev": "tsc --noEmit && bun run index.ts"
+      "bld": "tsc --noEmit && bun run index.ts"
     }
 }

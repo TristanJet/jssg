@@ -33,7 +33,7 @@ const SITE_TITLE = "Tristan Jet's Blog";
 
 const CONTENT_DIR = "content";
 const LAYOUT_DIR = "layouts";
-const DIST_DIR = "dist";
+const DIST_DIR = "public";
 const ASSETS_DIR = "assets";
 
 const BASE_LAYOUT = "base.html";

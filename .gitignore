@@ -39,3 +39,5 @@ assets/*
 
 dist/
 prev-blog/
+
+sync.sh

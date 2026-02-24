@@ -1,0 +1,168 @@
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: #ddd;
+  font-family: "Verdana", sans-serif;
+}
+
+b,
+strong {
+  color: #fff;
+}
+
+a {
+  color: #eee;
+}
+
+html {
+  color: #ccc;
+  font-family: "Georgia", serif;
+  font-size: 1.2em;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: #1a1a1a;
+}
+
+body {
+  margin-top: 60px;
+  width: 100%;
+  max-width: 800px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile {
+  margin-top: 1.6em;
+  display: flex;
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+.sub-row {
+  display: flex;
+  justify-content: space-between;
+  /* align-items: s; */
+  gap: 1.5rem;
+  font-size: 1em;
+}
+
+.date {
+  font-family: monospace;
+  color: #A855F7;
+}
+
+.profile-picture {
+  width: 220px;
+  height: auto;
+  object-fit: cover;
+  align-self: stretch;
+}
+
+.profile {
+  height: 100%;
+}
+
+.site-title {
+  color: #A855F7;
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  /* text-align: center; */
+}
+
+.subtitle-items {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav {
+  color: #A855F7;
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.nav-header {
+  color: #A855F7;
+}
+
+.block {
+  border: 1px dotted white;
+  padding: 5px 15px;
+  margin: 0 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.block h1 {
+  font-size: 1em;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+h5 {
+  margin-bottom: 0;
+}
+
+#contact-box {
+  padding-left: 1ch;
+  border: 0.3ch;
+  margin-right: 50%;
+  border-style: dashed;
+}
+
+.post-image {
+  display: block;
+  margin: 1.5rem auto;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+}
+
+.post-video {
+  display: block;
+  margin: 1.5rem auto;
+  width: 100%;
+  max-width: 800px;
+}
+
+#center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 800px;
+}
+
+#isagi {
+  max-width: 80%;
+}
+
+.small {
+  font-size: 0.8em;
+}
+
+.wave {
+  background: #111;
+  color: #fff;
+  text-shadow: 1px 1px 10px #fff, 1px 1px 10px #ccc;
+}
+
+footer {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+footer hr {
+  width: 100%;
+}
