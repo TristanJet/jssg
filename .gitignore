@@ -37,7 +37,7 @@ assets/*
 !assets/style.css
 
 
-dist/
+public/
 prev-blog/
 
 sync.sh
